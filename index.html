@@ -291,7 +291,7 @@ async function login(up){
  if(!email||password.length<8){amsg('Escribe tu correo y una contraseña de al menos 8 caracteres.');return}
  amsg('Un momento…');
  const r=up?await sb.auth.signUp({email,password}):await sb.auth.signInWithPassword({email,password});
- if(r.error){amsg(up?'No pude crear la cuenta. Prueba con otro correo o contraseña.':'Correo o contraseña incorrectos.');return}
+ if(r.error){amsg((up?'No pude crear la cuenta: ':'No pude entrar: ')+r.error.message);return}
  amsg(up&&!r.data.session?'Te enviamos un correo para confirmar tu cuenta. Después vuelve y entra.':'');
 }
 $('#bin').addEventListener('click',()=>login(false));$('#bup').addEventListener('click',()=>login(true));
