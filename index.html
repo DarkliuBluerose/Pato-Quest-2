@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pato Quest</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1F6F7A">
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@500;700&display=swap">
+<style>
+:root{--bg:#E4F1F3;--card:#fff;--ink:#14303A;--mut:#47636D;--pri:#1F6F7A;--onpri:#fff;--duck:#FFC93C;--ok:#2F7D43;--line:#B3D0D6;--e:#2F7D43;--n:#B26A00;--h:#B3365A;color-scheme:light dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F2229;--card:#173540;--ink:#EAF5F7;--mut:#A9C6CE;--pri:#7CCBD6;--onpri:#0F2229;--ok:#86D898;--line:#2B5160;--e:#86D898;--n:#F2B64D;--h:#F28DAE}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:19px/1.5 Nunito,system-ui,sans-serif;font-weight:500}
+h1,h2,h3,.f{font-family:Fredoka,Nunito,system-ui,sans-serif;font-weight:600;margin:0}
+main{max-width:640px;margin:0 auto;padding:16px 16px 110px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;min-height:48px;border-radius:14px;border:2px solid var(--line);background:var(--card);padding:6px 14px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--pri);outline-offset:2px}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.top .f{font-size:26px}
+.lvl{flex:1;min-width:200px;display:flex;align-items:center;gap:10px}
+.bar{flex:1;height:14px;background:var(--line);border-radius:9px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--duck);border-radius:9px;transition:width .4s}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.on{background:var(--pri);color:var(--onpri);border-color:var(--pri);font-weight:700}
+.seg button{flex:1}
+.q h3{font-size:21px}
+.mut{color:var(--mut);font-size:17px}
+.go{width:100%;margin-top:10px;background:var(--pri);color:var(--onpri);border-color:var(--pri);font-weight:700}
+.dn{background:var(--card);color:var(--ok);border-color:var(--ok);font-weight:700}
+.tag{font-weight:700}.t0{color:var(--e)}.t1{color:var(--n)}.t2{color:var(--h)}
+.duckbox{text-align:center}
+.duckbox svg{width:min(70vw,280px);height:auto;animation:bob 3.5s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+@media(prefers-reduced-motion:reduce){.duckbox svg{animation:none}.bar i{transition:none}}
+label{display:block;font-weight:700;margin:12px 0 4px}
+.coin{font-family:Fredoka,Nunito,system-ui,sans-serif;font-size:22px;white-space:nowrap}
+.shop{display:flex;gap:14px;align-items:center}.shop>div:last-child{flex:1}
+.th{width:96px;flex:none}.th svg{width:100%;height:auto}
+button:disabled{opacity:.6;cursor:default}
+nav{gap:4px}
+body.wait main,body.wait nav,body.wait #auth,body.out main,body.out nav{display:none}
+#auth{display:none;max-width:520px;margin:0 auto;padding:24px 16px}body.out #auth{display:block}
+.arena{position:relative;width:100%;max-width:420px;margin:0 auto;aspect-ratio:7/8;container-type:inline-size;overflow:hidden;border-radius:16px;border:2px solid var(--line);touch-action:none}
+.sp,.dk{position:absolute;width:14.2857%;height:12.5%;display:flex;align-items:center;justify-content:center;font-size:calc(100cqw/7*.75);line-height:1}
+.dk{transition:left .1s,top .1s}.dk svg{width:92%;height:auto}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:420px;margin:12px auto 0}.pad button{min-height:68px;font-size:28px}
+input,select{width:100%;min-height:50px;border-radius:12px;border:2px solid var(--line);background:var(--card);padding:6px 12px}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:2px solid var(--line)}
+nav button{flex:1;border:0;font-weight:700;font-size:17px;line-height:1.2;padding:4px 2px}
+#toast{position:fixed;left:12px;right:12px;bottom:calc(90px + env(safe-area-inset-bottom,0px));max-width:600px;margin:auto;background:var(--ink);color:var(--bg);border-radius:14px;padding:12px 16px;text-align:center;font-weight:700;display:none}
+</style>
+</head>
+<body class="wait">
+<div id="auth"><div class="card"><h1 class="f">🦆 Pato Quest</h1><p class="mut">Entra para guardar tu progreso y verlo en cualquier dispositivo.</p><label for="em">Correo</label><input id="em" type="email" autocomplete="email"><label for="pw">Contraseña (mínimo 8 caracteres)</label><input id="pw" type="password" autocomplete="current-password"><button class="go" id="bin">Entrar</button><button id="bup" style="width:100%;margin-top:8px">Crear cuenta</button><p id="am" class="tag t2" role="alert"></p></div></div>
+<main>
+<div class="top" id="top"></div>
+<div id="view"></div>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<nav id="nav"></nav>
+<script>
+// ===== CONFIGURACIÓN: pega aquí los datos de tu proyecto de Supabase =====
+const SUPABASE_URL='PEGA_AQUI_TU_URL',SUPABASE_KEY='PEGA_AQUI_TU_CLAVE_PUBLICA';
+// =========================================================================
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const CATS={ejercicio:['Ejercicio','🏃'],comida:['Buena comida','🥗'],hobbies:['Hobbies sanos','🎨'],habitos:['Hábitos','🌙']};
+const PER={d:['Diarias',1],w:['Semanales',3],m:['Mensuales',6]};
+const DIF=['Fácil','Normal','Difícil'],BASE=[10,25,50];
+const Q=[
+['ejercicio','d','Caminar',['10 minutos','25 minutos','45 minutos']],
+['ejercicio','d','Estirar el cuerpo',['3 minutos','8 minutos','15 minutos']],
+['comida','d','Beber agua',['3 vasos','6 vasos','8 vasos']],
+['comida','d','Fruta o verdura',['1 porción','3 porciones','5 porciones']],
+['hobbies','d','Practicar un hobby',['5 minutos','20 minutos','1 hora']],
+['habitos','d','Dormir a buena hora',['Acostarte cerca de la hora prevista','Acostarte a la hora prevista','A la hora prevista y sin pantallas 30 min antes']],
+['habitos','d','Ordenar un poco',['1 cosa','Un rincón (10 min)','Toda una habitación']],
+['ejercicio','w','Sesiones de ejercicio',['1 sesión','3 sesiones','5 sesiones']],
+['comida','w','Cocinar en casa',['1 comida','3 comidas','5 comidas']],
+['hobbies','w','Dedicar tiempo a un hobby',['1 sesión','3 sesiones','5 sesiones']],
+['habitos','w','Salir al aire libre',['1 vez','3 veces','5 veces']],
+['ejercicio','m','Reto de movimiento',['Probar una actividad nueva','12 sesiones','20 sesiones']],
+['comida','m','Recetas nuevas',['1 receta','3 recetas','6 recetas']],
+['hobbies','m','Proyecto personal',['Avanzar un poco','Llegar a la mitad','Terminarlo']],
+['habitos','m','Revisión del mes',['Anotar 1 logro','Anotar 3 logros y 1 meta','Revisar hábitos y planear el mes']]
+];
+let st={xp:0,coins:0,own:{},eq:{},done:{},tier:{},custom:[]};
+try{Object.assign(st,JSON.parse(localStorage.getItem('patoquest')||'{}'))}catch(e){}
+delete st.mood;
+const save=()=>{try{localStorage.setItem(LS,JSON.stringify(st))}catch(e){}cloudSave()};
+let tab='pato',per='d',cat='all',draft=null,tt,shopSlot='body';
+let net={f:null,err:'',code:'',ok:false,email:''},lastSaved='',lastDuck='',me=null,ct=0,LS='patoquest';
+const all=()=>Q.map((q,i)=>({id:'q'+i,cat:q[0],per:q[1],name:q[2],tiers:q[3]})).concat(st.custom.map(c=>({...c,custom:1})));
+const curD=q=>q.custom?q.d:(st.tier[q.id]||0);
+const xpOf=q=>BASE[curD(q)]*PER[q.per][1];
+const pad=x=>String(x).padStart(2,'0');
+function key(p){const n=new Date();if(p==='m')return n.getFullYear()+'-'+pad(n.getMonth()+1);if(p==='w')n.setDate(n.getDate()-((n.getDay()+6)%7));return n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate())}
+const isDone=q=>{const s=st.done[q.id];return !!s&&s.split('|')[0]===key(q.per)};
+function lv(x){let l=1,n=60;while(x>=n){x-=n;l++;n=60+20*(l-1)}return{l,x,n}}
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(tt);tt=setTimeout(()=>e.style.display='none',2600)}
+function evalQ(t){
+ t=t.toLowerCase();let pts=0,why=[];
+ for(const m of t.matchAll(/(\d+(?:[.,]\d+)?)\s*(minutos|min|horas|hora|h|km|veces|repeticiones|reps|vasos|páginas|paginas|sesiones|días|dias)\b/g)){
+  const n=parseFloat(m[1].replace(',','.')),u=m[2];
+  if(/^min/.test(u)){if(n>=40){pts+=2;why.push(n+' min de esfuerzo sostenido')}else if(n>=15){pts+=1;why.push(n+' min de dedicación')}}
+  else if(/^h/.test(u)){pts+=n>=2?3:2;why.push(n+' h de dedicación')}
+  else if(u==='km'){if(n>=5){pts+=2;why.push(n+' km es una distancia larga')}else if(n>=2){pts+=1;why.push(n+' km de recorrido')}}
+  else{if(n>=20){pts+=2;why.push(n+' '+u+' es mucha repetición')}else if(n>=8){pts+=1;why.push(n+' '+u)}}
+ }
+ let kw=0;
+ if(/todos los d[ií]as|cada d[ií]a|sin (az[uú]car|pantallas?|redes|m[oó]vil)|correr|madrugar|ayuno|gimnasio/.test(t)){kw++;why.push('pide constancia o dejar un hábito')}
+ if(/un poco|probar|intentar|anotar|1 minuto/.test(t)){kw--;why.push('es un paso pequeño')}
+ const tot=Math.max(0,1+pts+kw),d=tot<=1?0:tot<=3?1:2;
+ return{d,why:why.length?why.join(', '):'no veo cifras claras, la tomo como tarea sencilla. Añade minutos, km o veces para afinar'};
+}
+const SLOTS=['body','neck','hair','eyes','head','hand'],SN={body:'Ropa',neck:'Cuello',hair:'Pelo',eyes:'Gafas',head:'Sombreros',hand:'Mano'};
+const hr=c=>`<path d="M86 70q0-40 36-40q38 0 38 40q-12-24-38-24q-26 0-36 24z" fill="${c}"/><path d="M86 70q-8 28 2 44q8-14 6-40z" fill="${c}"/>`;
+const ITEMS=[
+['cam','body','Camiseta verde',70,'<path d="M52 128q44-16 90 0q8 24-4 38q-42 12-82 0q-12-14-4-38z" fill="#3E9E6B"/>'],
+['capa','body','Capa roja',150,'<path d="M50 104q-34 40-8 80q32-10 42-34z" fill="#C93C5A"/>',1],
+['bufa','neck','Bufanda azul',40,'<rect x="92" y="98" width="62" height="14" rx="7" fill="#4C8BF5"/><rect x="100" y="106" width="12" height="22" rx="5" fill="#4C8BF5"/>'],
+['lazo','neck','Lazo rosa',50,'<path d="M110 106l-18-12v24zM110 106l18-12v24z" fill="#E87BA8"/><circle cx="110" cy="106" r="5" fill="#C9507F"/>'],
+['pel1','hair','Mechón naranja',30,'<path d="M112 40q-4-22 10-28q0 16 14 28z" fill="#F28C28"/>'],
+['pel2','hair','Pelo rosa',80,hr('#E87BA8')],
+['pel3','hair','Pelo azul',100,hr('#4C8BF5')],
+['gaf1','eyes','Gafas redondas',50,'<circle cx="134" cy="62" r="13" fill="none" stroke="#14303A" stroke-width="4"/><path d="M121 62h-14" stroke="#14303A" stroke-width="3"/>'],
+['gaf2','eyes','Gafas de sol',70,'<rect x="120" y="54" width="28" height="16" rx="6" fill="#14303A"/><path d="M106 60h14" stroke="#14303A" stroke-width="3"/>'],
+['gor','head','Gorra roja',60,'<path d="M88 56q4-26 34-26q32 0 36 26z" fill="#D64545"/><path d="M146 54h26q-2 8-26 6z" fill="#B53030"/>'],
+['flor','head','Corona de flores',90,'<circle cx="96" cy="46" r="8" fill="#FF8FB1"/><circle cx="114" cy="38" r="8" fill="#fff"/><circle cx="132" cy="36" r="8" fill="#FF8FB1"/><circle cx="150" cy="44" r="8" fill="#fff"/>'],
+['mago','head','Sombrero de mago',150,'<path d="M92 46l30-46l30 46z" fill="#5B3FA8"/><ellipse cx="122" cy="46" rx="38" ry="8" fill="#47328A"/>']];
+{
+const P=(s,x,l,b)=>l.forEach(([n,p,f,...a],i)=>ITEMS.push([x+(i+1),s,n,p,typeof f==='function'?f(...a):f,b]));
+const cap=c=>`<path d='M88 56q4-26 34-26q32 0 36 26z' fill='${c}'/><path d='M146 54h26q-2 8-26 6z' fill='${c}'/>`,
+bean=c=>`<path d='M88 52q2-26 34-26q34 0 36 26z' fill='${c}'/><rect x='86' y='48' width='74' height='10' rx='5' fill='${c}' opacity='.75'/><circle cx='122' cy='24' r='7' fill='#fff'/>`,
+wiz=c=>`<path d='M92 46l30-46l30 46z' fill='${c}'/><ellipse cx='122' cy='46' rx='38' ry='8' fill='${c}'/><circle cx='122' cy='30' r='4' fill='#FFD84A'/>`,
+pt=c=>`<path d='M88 54q6-30 38-28q30 4 42 40q-34-18-80-12z' fill='${c}'/>`,
+crn=c=>`<path d='M96 42l6-24l14 14l6-20l6 20l14-14l6 24z' fill='${c}' stroke='#0003' stroke-width='2'/>`,
+tph=c=>`<rect x='100' y='8' width='44' height='36' fill='${c}'/><ellipse cx='122' cy='44' rx='40' ry='8' fill='${c}'/><rect x='100' y='34' width='44' height='7' fill='#C93C5A'/>`,
+moh=c=>`<path d='M100 42l6-26l7 22l8-28l8 26l8-24l5 30z' fill='${c}'/>`,
+tuft=c=>`<path d='M112 40q-4-22 10-28q0 16 14 28z' fill='${c}'/>`,
+afro=c=>`<circle cx='102' cy='42' r='18' fill='${c}'/><circle cx='122' cy='32' r='22' fill='${c}'/><circle cx='142' cy='40' r='18' fill='${c}'/>`,
+bun=c=>hr(c)+`<circle cx='122' cy='22' r='14' fill='${c}'/>`,
+rg=c=>`<circle cx='134' cy='62' r='13' fill='none' stroke='${c}' stroke-width='4'/><path d='M121 62h-14' stroke='${c}' stroke-width='3'/>`,
+sg=c=>`<rect x='120' y='54' width='28' height='16' rx='6' fill='${c}'/><path d='M106 60h14' stroke='${c}' stroke-width='3'/>`,
+ht=c=>`<path d='M134 74q-20-12-12-20q6-6 12 2q6-8 12-2q8 8-12 20z' fill='${c}'/>`,
+mk=c=>`<path d='M100 56q34-14 56 0q-4 18-26 14q-20 4-30-14z' fill='${c}'/><circle cx='134' cy='62' r='5' fill='#fff'/><circle cx='135' cy='62' r='2.5' fill='#14303A'/>`,
+sc=c=>`<rect x='92' y='98' width='62' height='14' rx='7' fill='${c}'/><rect x='100' y='106' width='12' height='22' rx='5' fill='${c}'/>`,
+bw=c=>`<path d='M110 106l-18-12v24zM110 106l18-12v24z' fill='${c}'/><circle cx='110' cy='106' r='5' fill='#0003'/>`,
+te=c=>`<path d='M106 100h12l-2 8l6 24l-10 8l-10-8l6-24z' fill='${c}'/>`,
+bd=c=>`<path d='M92 98h62l-31 28z' fill='${c}'/><circle cx='118' cy='108' r='2.5' fill='#fff'/>`,
+sh=c=>`<path d='M52 128q44-16 90 0q8 24-4 38q-42 12-82 0q-12-14-4-38z' fill='${c}'/>`,
+ov=(c,s)=>sh(s)+`<path d='M60 142q36 12 72 0q4 22-4 24q-32 10-64 0q-8-2-4-24z' fill='${c}'/><rect x='74' y='116' width='8' height='26' fill='${c}'/><rect x='106' y='116' width='8' height='26' fill='${c}'/>`,
+tn=c=>`<path d='M50 126q46-18 94 0q10 28-2 42q-44 12-86 0q-10-14-6-42z' fill='${c}'/><rect x='50' y='146' width='94' height='8' fill='#7A4A2A'/><rect x='91' y='144' width='10' height='12' fill='#F2B01E'/>`,
+dr=c=>`<path d='M60 122q36-12 72 0l18 56q-54 12-108 0z' fill='${c}'/>`,
+hd=c=>`<path d='M50 124q46-18 94 0q10 30-2 44q-44 12-86 0q-10-14-6-44z' fill='${c}'/><path d='M88 118q14 18 28 0' fill='none' stroke='#fff' stroke-width='3'/><rect x='72' y='146' width='48' height='14' rx='5' fill='#0002'/>`,
+cp=c=>`<path d='M50 104q-34 40-8 80q32-10 42-34z' fill='${c}'/>`,
+sw=(b,g)=>`<rect x='164' y='108' width='7' height='38' fill='${b}' stroke='#0003'/><path d='M164 108l3.5-10l3.5 10z' fill='${b}'/><rect x='156' y='146' width='23' height='6' rx='3' fill='${g}'/><rect x='164' y='152' width='7' height='14' fill='#7A4A2A'/>`;
+P('head','k',[['Gorra azul',60,cap,'#3A6FD8'],['Gorra verde',60,cap,'#3E9E6B'],['Gorra negra',60,cap,'#2A2F38'],['Gorra amarilla',60,cap,'#F2B01E'],['Gorro de lana rojo',50,bean,'#D64545'],['Gorro de lana azul',50,bean,'#3A6FD8'],['Gorro de lana amarillo',50,bean,'#F2B01E'],['Sombrero de mago azul',150,wiz,'#3A6FD8'],['Sombrero de bruja',150,wiz,'#2A2F38'],['Gorro de aventurero',120,pt,'#3E9E6B'],['Gorro de explorador',120,pt,'#9A6B3A'],['Corona de oro',250,crn,'#F2B01E'],['Corona de plata',220,crn,'#C7D0D9'],['Sombrero de copa negro',140,tph,'#2A2F38'],['Sombrero de copa blanco',140,tph,'#F4F4F4'],['Sombrero pirata',130,`<path d='M84 50q38-44 76 0q-38-12-76 0z' fill='#222'/><circle cx='122' cy='34' r='5' fill='#fff'/>`],['Sombrero vaquero',110,`<ellipse cx='122' cy='46' rx='48' ry='9' fill='#A8743A'/><path d='M98 46q0-26 24-26t24 26z' fill='#B98348'/>`]]);
+P('hair','p',[['Pelo negro',60,hr,'#2A2F38'],['Pelo castaño',60,hr,'#7A4A2A'],['Pelo rubio',60,hr,'#F2D16B'],['Pelo rojo',70,hr,'#D64545'],['Pelo verde',90,hr,'#3E9E6B'],['Pelo morado',90,hr,'#7A4FD1'],['Pelo blanco',90,hr,'#F4F4F4'],['Cresta verde',80,moh,'#3E9E6B'],['Cresta rosa',80,moh,'#E87BA8'],['Cresta azul',80,moh,'#4C8BF5'],['Mechón rojo',30,tuft,'#D64545'],['Mechón amarillo',30,tuft,'#F2B01E'],['Mechón verde',30,tuft,'#3E9E6B'],['Afro negro',110,afro,'#2A2F38'],['Afro castaño',110,afro,'#7A4A2A'],['Moño negro',100,bun,'#2A2F38'],['Moño rosa',100,bun,'#E87BA8']]);
+P('eyes','g',[['Gafas redondas rojas',50,rg,'#D64545'],['Gafas redondas doradas',60,rg,'#C9A02A'],['Gafas redondas azules',50,rg,'#3A6FD8'],['Gafas de sol rojas',70,sg,'#D64545'],['Gafas de sol azules',70,sg,'#3A6FD8'],['Gafas de sol rosas',70,sg,'#E87BA8'],['Gafas de corazón rosa',90,ht,'#FF6FA8'],['Gafas de corazón rojo',90,ht,'#E03C3C'],['Gafas de estrella',100,`<path d='M134 48l5 11l12 1l-9 8l3 12l-11-6l-11 6l3-12l-9-8l12-1z' fill='#FFD84A' stroke='#C98A00'/>`],['Monóculo',80,`<circle cx='134' cy='62' r='13' fill='none' stroke='#C9A02A' stroke-width='3'/><path d='M134 75q4 20 10 26' stroke='#C9A02A' stroke-width='2' fill='none'/>`],['Parche pirata',60,`<path d='M104 46l56 28' stroke='#222' stroke-width='3'/><ellipse cx='134' cy='62' rx='12' ry='10' fill='#222'/>`],['Gafas 3D',70,`<rect x='112' y='52' width='22' height='20' fill='#E03C3C' opacity='.8'/><rect x='134' y='52' width='22' height='20' fill='#3C7CE0' opacity='.8'/>`],['Gafas de aviador',110,`<circle cx='134' cy='62' r='14' fill='#9FE' opacity='.5' stroke='#8A5A2B' stroke-width='5'/><path d='M96 56q10-6 24 0' stroke='#8A5A2B' stroke-width='5' fill='none'/>`],['Visor futurista',130,`<rect x='116' y='54' width='36' height='14' rx='7' fill='#39E6B0' opacity='.85'/>`],['Pestañas largas',40,`<path d='M138 54l6-6M134 52l2-8M130 54l-2-6' stroke='#14303A' stroke-width='3' stroke-linecap='round'/>`],['Antifaz negro',80,mk,'#2A2F38'],['Antifaz rojo',80,mk,'#D64545'],['Gafas de ojo de gato',90,`<path d='M118 66q6-18 34-12q-2 10-12 14q-12 4-22-2z' fill='none' stroke='#B3365A' stroke-width='4'/>`]]);
+P('neck','n',[['Bufanda roja',40,sc,'#D64545'],['Bufanda verde',40,sc,'#3E9E6B'],['Bufanda amarilla',40,sc,'#F2B01E'],['Bufanda morada',40,sc,'#7A4FD1'],['Bufanda blanca',40,sc,'#F4F4F4'],['Pajarita negra',50,bw,'#2A2F38'],['Pajarita roja',50,bw,'#D64545'],['Pajarita azul',50,bw,'#3A6FD8'],['Corbata roja',60,te,'#D64545'],['Corbata azul',60,te,'#3A6FD8'],['Collar de perlas',100,`<path d='M92 100q18 24 56 0' fill='none' stroke='#F4F4F4' stroke-width='6' stroke-dasharray='1 9' stroke-linecap='round'/>`],['Collar de oro',120,`<path d='M92 100q18 24 56 0' fill='none' stroke='#F2B01E' stroke-width='4'/>`],['Collar de cascabel',60,`<path d='M94 102q20 14 56 0' stroke='#C93C5A' stroke-width='5' fill='none'/><circle cx='122' cy='116' r='8' fill='#F2B01E'/><path d='M118 120h8' stroke='#8A6A00'/>`],['Medalla de oro',130,`<path d='M110 100l8 14l8-14z' fill='#3A6FD8'/><circle cx='118' cy='122' r='11' fill='#F2B01E' stroke='#B3791A' stroke-width='3'/>`],['Guirnalda de flores',90,`<path d='M90 100q30 28 62 0' fill='none' stroke='#FF8FB1' stroke-width='10' stroke-dasharray='2 8' stroke-linecap='round'/>`],['Bandana roja',50,bd,'#D64545'],['Bandana azul',50,bd,'#3A6FD8'],['Amuleto de cristal',150,`<path d='M92 100q22 14 58 0' stroke='#777' stroke-width='3' fill='none'/><path d='M122 112l8 8l-8 12l-8-12z' fill='#39C5E6' stroke='#1A7A94' stroke-width='2'/>`]]);
+P('body','b',[['Camiseta roja',70,sh,'#D64545'],['Camiseta azul',70,sh,'#3A6FD8'],['Camiseta amarilla',70,sh,'#F2B01E'],['Camiseta negra',70,sh,'#2A2F38'],['Camiseta blanca',70,sh,'#F4F4F4'],['Camiseta rosa',70,sh,'#E87BA8'],['Peto azul',100,ov,'#3A6FD8','#F4F4F4'],['Traje de fontanero',140,ov,'#3A6FD8','#D64545'],['Túnica de aventurero',130,tn,'#3E9E6B'],['Túnica azul',130,tn,'#3A6FD8'],['Vestido rosa',110,dr,'#E87BA8'],['Vestido azul',110,dr,'#4C8BF5'],['Sudadera gris',90,hd,'#8C97A3'],['Sudadera azul',90,hd,'#3A6FD8'],['Armadura de caballero',220,`<path d='M52 126q44-16 90 0q8 24-4 40q-42 12-82 0q-12-16-4-40z' fill='#B8C2CC' stroke='#7C8794' stroke-width='3'/><path d='M96 116v52' stroke='#7C8794' stroke-width='3'/>`]]);
+P('body','c',[['Capa azul',130,cp,'#3A6FD8'],['Capa morada',130,cp,'#7A4FD1'],['Capa negra',130,cp,'#2A2F38']],1);
+P('hand','m',[['Espada de héroe',150,sw,'#C7D0D9','#F2B01E'],['Espada de fuego',180,sw,'#FF6A2A','#7A2A0A'],['Espada de hielo',180,sw,'#8FD8F0','#4C8BF5'],['Espada dorada',250,sw,'#F2B01E','#B3791A'],['Escudo azul',120,`<path d='M150 118h30v18q0 16-15 22q-15-6-15-22z' fill='#3A6FD8' stroke='#F2B01E' stroke-width='3'/>`],['Varita mágica',110,`<path d='M158 160l18-40' stroke='#7A4A2A' stroke-width='5'/><path d='M178 112l4 8l8 1l-6 6l2 8l-8-4l-8 4l2-8l-6-6l8-1z' fill='#FFD84A'/>`],['Paraguas rosa',70,`<path d='M150 120q18-26 36 0z' fill='#E87BA8'/><path d='M168 120v40' stroke='#444' stroke-width='3'/>`],['Flor',40,`<path d='M166 168v-30' stroke='#3E9E6B' stroke-width='4'/><circle cx='166' cy='130' r='9' fill='#FF8FB1'/><circle cx='166' cy='130' r='3.5' fill='#FFD84A'/>`]]);
+}
+const wear=(E,b)=>SLOTS.map(k=>ITEMS.find(i=>i[0]===E[k]&&i[1]===k&&!!i[5]===!!b)).filter(Boolean).map(i=>i[4]).join('');
+function duck(l,E){E=E||st.eq||{};const bk=wear(E,1),fr=wear(E,0);
+ return `<svg viewBox="0 0 200 200" role="img" aria-label="Tu pato, nivel ${l}">
+<ellipse cx="100" cy="190" rx="52" ry="6" fill="#000" opacity=".12"/>
+<ellipse cx="82" cy="182" rx="14" ry="6" fill="#F28C28"/><ellipse cx="118" cy="182" rx="14" ry="6" fill="#F28C28"/>
+${bk}<ellipse cx="96" cy="136" rx="64" ry="46" fill="#FFC93C"/>
+<path d="M54 128q22 40 62 8q-26-6-62-8z" fill="#F2B01E"/>
+<circle cx="122" cy="72" r="38" fill="#FFC93C"/>
+<path d="M148 70q34 2 38 14q-6 12-38 8z" fill="#F28C28"/>
+<circle cx="134" cy="62" r="6" fill="#14303A"/><circle cx="136" cy="60" r="2" fill="#fff"/>
+<circle cx="128" cy="82" r="6" fill="#FF9E7A" opacity=".6"/>
+${l>=3&&!E.neck?'<rect x="92" y="98" width="62" height="14" rx="7" fill="#E8506A"/><rect x="100" y="106" width="12" height="22" rx="5" fill="#E8506A"/>':''}
+${E.head||E.hair?'':l>=10?'<path d="M96 40l8-26l14 16l14-20l14 20l14-16l6 26z" fill="#F2B01E" stroke="#B3791A" stroke-width="3"/>':l>=6?'<ellipse cx="122" cy="40" rx="42" ry="9" fill="#C9A15B"/><path d="M96 40q0-28 26-28t26 28z" fill="#D9B56E"/><rect x="96" y="30" width="52" height="7" fill="#B3365A"/>':''}
+${fr}</svg>`}
+const msg=l=>l>=10?'Tu pato lleva corona. Ya es leyenda del estanque.':l>=6?'Tu pato estrenó sombrero de paja.':l>=3?'Tu pato ya lleva su bufanda.':'Tu pato está empezando su aventura.';
+function qcard(q){
+ const d=curD(q),dn=isDone(q),c=CATS[q.cat];
+ let h=`<div class="card q"><h3>${esc(q.name)}</h3><div class="mut">${c[1]} ${c[0]} · +${xpOf(q)} XP · 🪙 ${xpOf(q)/5}</div>`;
+ if(q.custom){h+=`<p style="margin:8px 0 0"><span class="tag t${d}">${DIF[d]}</span> <span class="mut">${esc(q.reason)}</span></p>`}
+ else{h+=`<div class="row" style="margin-top:10px" role="group" aria-label="Dificultad">`+DIF.map((n,i)=>`<button data-a="tier" data-v="${q.id}:${i}" class="${i===d?'on':''}" ${dn?'disabled':''} aria-pressed="${i===d}">${n}</button>`).join('')+`</div><p style="margin:8px 0 0">${esc(q.tiers[d])}</p>`}
+ h+=`<button class="go ${dn?'dn':''}" data-a="done" data-v="${q.id}">${dn?'Hecha ✓ (tocar para deshacer)':'Completar'}</button>`;
+ if(q.custom)h+=`<button data-a="del" data-v="${q.id}" style="margin-top:8px">Borrar misión</button>`;
+ return h+'</div>'}
+function render(){
+ const L=lv(st.xp);
+ $('#top').innerHTML=`<h1 class="f">Pato Quest</h1><div class="lvl"><b>Nivel ${L.l}</b><div class="bar" role="progressbar" aria-valuenow="${L.x}" aria-valuemax="${L.n}"><i style="width:${L.x/L.n*100}%"></i></div><span class="mut">${L.x}/${L.n} XP</span></div><b class="coin" aria-label="Pato monedas">🪙 ${st.coins||0}</b>`;
+ $('#nav').innerHTML=[['pato','🦆 Pato'],['mis','📜 Misiones'],['shop','🛍️ Tienda'],['fr','👥 Amigos']].map(([k,n])=>`<button data-a="tab" data-v="${k}" class="${tab===k?'on':''}" ${tab===k?'aria-current="page"':''}>${n.replace(' ','<br>')}</button>`).join('');
+ const A=all(),v=$('#view');
+ if(tab==='rec'){
+  const h=k=>(st.hi&&st.hi[k])||0;
+  v.innerHTML=!G?`<div class='card'><h2>🎮 Zona de Recreo</h2><p class='mut'>Aquí jugar no da XP ni monedas. Es solo para divertirse.</p></div><div class='card'><h3>🚗 Cruza la calle</h3><p class='mut'>Llega al estanque sin que te atropellen. Récord: ${h('road')}</p><button class='go' data-a='play' data-v='road'>Jugar</button></div><div class='card'><h3>🍞 Atrapa migas</h3><p class='mut'>30 segundos: atrapa el pan y esquiva las piedras 🪨. Récord: ${h('crumbs')}</p><button class='go' data-a='play' data-v='crumbs'>Jugar</button></div><button data-a='tab' data-v='pato'>← Volver al Pato</button>`:`<div class='row' style='justify-content:space-between;align-items:center;margin-bottom:10px'><b id='gs' class='f' style='font-size:22px'></b><button data-a='menu'>Salir</button></div><div id='arena' class='arena'></div><div id='ov'></div><div class='pad'>${G.type==='road'?"<span></span><button data-g='u' aria-label='Arriba'>▲</button><span></span><button data-g='l' aria-label='Izquierda'>◀</button><button data-g='d' aria-label='Abajo'>▼</button><button data-g='r' aria-label='Derecha'>▶</button>":"<button data-g='l' aria-label='Izquierda'>◀</button><span></span><button data-g='r' aria-label='Derecha'>▶</button>"}</div>`;
+  if(G)startGame();
+ }else if(tab==='fr'){
+  v.innerHTML=`<div class='card'><h2>Amigos Patos</h2>`+(st.share?`<p>Tu pato se muestra como <b>${esc(st.name)}</b>.</p><p>Tu código de amigo: <b id='mycode' class='f' style='font-size:24px;letter-spacing:2px'>${esc(net.code||'…')}</b></p><p class='mut'>Pásaselo a tus amigos para que te agreguen.</p><button data-a='unshare'>Dejar de mostrar mi pato</button>`:`<label for='dn'>Nombre de tu pato</label><input id='dn' maxlength='20' value='${esc(st.name||'')}'><p class='mut'>Tus amigos verán solo el nombre, el nivel y la ropa de tu pato.</p><button class='go' data-a='share'>Mostrar mi pato a mis amigos</button>`)+`</div><div class='card'><label for='fc'>Agregar amigo con su código</label><input id='fc' maxlength='12' autocapitalize='characters'><button class='go' data-a='addf'>Agregar</button><p id='fm' class='mut' role='status'></p></div><div id='frl'></div>`;drawFriends();
+ }else if(tab==='pato'){
+  v.innerHTML=`<div class="card duckbox">${duck(L.l)}<h2>${esc(st.name||'Tu pato')} · Nivel ${L.l}</h2><p class="mut" style="margin:4px 0 0">${msg(L.l)} Te faltan ${L.n-L.x} XP para el nivel ${L.l+1}.</p></div><div class="card"><h3>Tu progreso</h3>`+
+  Object.keys(PER).map(p=>{const l=A.filter(q=>q.per===p),d=l.filter(isDone).length;return `<p style="margin:8px 0 0">${PER[p][0]}: <b>${d} de ${l.length}</b> hechas</p>`}).join('')+`<button class="go" data-a="tab" data-v="mis">Ver misiones</button></div><div class="card"><h3>🎮 Zona de Recreo</h3><p class="mut" style="margin:4px 0 0">Minijuegos para relajarte, sin XP ni monedas.</p><button class="go" data-a="tab" data-v="rec">Ir a jugar</button></div><button data-a="logout" style="margin-top:4px">Cerrar sesión (${esc(net.email||'')})</button>`;
+ }else if(tab==='mis'){
+  const f=A.filter(q=>q.per===per&&(cat==='all'||q.cat===cat));
+  v.innerHTML=`<button class="go" style="margin:0 0 12px" data-a="tab" data-v="new">✏️ Crear mi propia misión</button><div class="row seg" role="group" aria-label="Periodo">`+Object.keys(PER).map(p=>`<button data-a="per" data-v="${p}" class="${per===p?'on':''}">${PER[p][0]}</button>`).join('')+`</div><div class="row" style="margin:10px 0 14px" role="group" aria-label="Categoría"><button data-a="cat" data-v="all" class="${cat==='all'?'on':''}">Todas</button>`+Object.keys(CATS).map(k=>`<button data-a="cat" data-v="${k}" class="${cat===k?'on':''}">${CATS[k][1]} ${CATS[k][0]}</button>`).join('')+`</div>`+(f.length?f.map(qcard).join(''):'<div class="card">No hay misiones aquí. Crea una con el botón de arriba.</div>');
+ }else if(tab==='shop'){
+  v.innerHTML=`<div class="card duckbox">${duck(L.l)}<h2>🪙 ${st.coins||0} pato monedas</h2><p class="mut" style="margin:4px 0 0">Ganas 1 moneda por cada 5 XP de tus misiones.</p></div><div class="row" role="group" aria-label="Tipo de objeto" style="margin-bottom:12px">`+SLOTS.map(k=>`<button data-a="slot" data-v="${k}" class="${shopSlot===k?'on':''}">${SN[k]}</button>`).join('')+`</div>`+ITEMS.filter(i=>i[1]===shopSlot).sort((a,b)=>a[3]-b[3]).map(i=>{const own=st.own[i[0]],on=st.eq[i[1]]===i[0],miss=i[3]-(st.coins||0);return `<div class="card shop"><div class="th">${duck(0,{[i[1]]:i[0]})}</div><div><h3>${i[2]}</h3><div class="mut">${own?'Ya lo tienes':'🪙 '+i[3]}</div><button data-a="${own?'eq':'buy'}" data-v="${i[0]}" class="${on?'dn':own?'':'go'}" ${!own&&miss>0?'disabled':''}>${own?(on?'Puesto ✓ (tocar para quitar)':'Ponérselo'):(miss>0?'Te faltan '+miss+' 🪙':'Comprar')}</button></div></div>`}).join('');
+ }else{
+  v.innerHTML=`<div class="card"><h2>Crear misión</h2><p class="mut">Escribe tu misión con cifras (minutos, km, veces) y la app calcula la dificultad y la XP.</p><label for="nm">Tu misión</label><input id="nm" maxlength="80" placeholder="Ej: Caminar 30 minutos"><label for="np">Se repite</label><select id="np"><option value="d">Cada día</option><option value="w">Cada semana</option><option value="m">Cada mes</option></select><label for="nc">Categoría</label><select id="nc">`+Object.keys(CATS).map(k=>`<option value="${k}">${CATS[k][0]}</option>`).join('')+`</select><button class="go" data-a="eval">Evaluar dificultad</button><div id="res"></div></div>`;
+ }}
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=b.dataset.v;
+ if(a==='tab'){tab=v;draft=null;G=null;if(v==='fr'&&me)loadFriends()}
+ else if(a==='per')per=v;
+ else if(a==='cat')cat=v;
+ else if(a==='tier'){const[id,i]=v.split(':');st.tier[id]=+i;save()}
+ else if(a==='slot')shopSlot=v;
+ else if(a==='buy'){const it=ITEMS.find(i=>i[0]===v);if(it&&!st.own[v]&&(st.coins||0)>=it[3]){st.coins-=it[3];st.own[v]=1;st.eq[it[1]]=v;save();toast('Comprado: '+it[2])}}
+ else if(a==='eq'){const it=ITEMS.find(i=>i[0]===v);if(it){st.eq[it[1]]=st.eq[it[1]]===v?'':v;save()}}
+ else if(a==='done'){
+  const q=all().find(x=>x.id===v),before=lv(st.xp).l;
+  if(isDone(q)){const rx=parseInt(st.done[v].split('|')[1]);st.xp=Math.max(0,st.xp-rx);st.coins=Math.max(0,(st.coins||0)-rx/5);delete st.done[v]}
+  else{const x=xpOf(q);st.done[v]=key(q.per)+'|'+x;st.xp+=x;st.coins=(st.coins||0)+x/5;toast('+'+x+' XP · +'+x/5+' 🪙 · '+q.name);const n=lv(st.xp).l;if(n>before)setTimeout(()=>toast('¡Tu pato subió al nivel '+n+'!'),1400)}
+  save()}
+ else if(a==='del'){const q=all().find(x=>x.id===v);if(isDone(q)){const rx=parseInt(st.done[v].split('|')[1]);st.xp=Math.max(0,st.xp-rx);st.coins=Math.max(0,(st.coins||0)-rx/5)}delete st.done[v];st.custom=st.custom.filter(x=>x.id!==v);save()}
+ else if(a==='eval'){
+  const name=$('#nm').value.trim();if(!name){$('#res').innerHTML='<p class="tag t2">Escribe primero tu misión.</p>';$('#nm').focus();return}
+  const r=evalQ(name),p=$('#np').value;draft={name,per:p,cat:$('#nc').value,d:r.d,reason:r.why};
+  $('#res').innerHTML=`<div class="card" style="margin-top:14px"><b>${esc(name)}</b><p style="margin:6px 0">Dificultad: <span class="tag t${r.d}">${DIF[r.d]}</span> · <b>+${BASE[r.d]*PER[p][1]} XP · 🪙 ${BASE[r.d]*PER[p][1]/5}</b></p><p class="mut" style="margin:0">Porque ${esc(r.why)}.</p><button class="go" data-a="add">Añadir misión</button></div>`;return}
+ else if(a==='add'&&draft){st.custom.push({...draft,id:'c'+Date.now()});per=draft.per;cat='all';tab='mis';draft=null;save();toast('Misión añadida')}
+ else if(a==='play'){G={type:v}}
+ else if(a==='menu'){G=null}
+ else if(a==='share'){const n=($('#dn').value||'').trim().slice(0,20);if(!n){toast('Ponle un nombre a tu pato');return}st.name=n;st.share=true;save();shareNow()}
+ else if(a==='unshare'){st.share=false;lastDuck='';save();unshareNow()}
+ else if(a==='addf'){const c=($('#fc').value||'').trim().toUpperCase();if(!c){toast('Escribe el código de tu amigo');return}addFriend(c);return}
+ else if(a==='delf'){sb.from('friends').delete().eq('friend_id',v).then(()=>loadFriends());return}
+ else if(a==='refresh'){loadFriends();toast('Actualizando…')}
+ else if(a==='logout'){(async()=>{clearTimeout(ct);await flush();await sb.auth.signOut()})();return}
+ render();afterAct()});
+const COLS=7,ROWS=8;let G=null,raf=0;
+function hud(){const e=$('#gs');if(!e||!G)return;const h=(st.hi&&st.hi[G.type])||0;e.textContent=G.type==='road'?`Cruces: ${G.s} · Récord: ${h}`:`Pan: ${G.s} · ⏱ ${Math.max(0,Math.ceil(G.t))} s · Récord: ${h}`}
+function end(){G.over=true;st.hi=st.hi||{};const k=G.type,nr=G.s>(st.hi[k]||0);if(nr){st.hi[k]=G.s;save()}hud();$('#ov').innerHTML=`<div class='card' style='text-align:center;margin-top:12px'><h3>${k==='road'?'¡Te atropellaron! 🚗':'¡Se acabó el tiempo! ⏱'}</h3><p>Puntos: <b>${G.s}</b>${nr?' · ¡Nuevo récord!':''}</p><button class='go' data-a='play' data-v='${k}'>Jugar otra vez</button></div>`}
+function put(){const d=$('#dk');if(!d)return;d.style.left=G.dc/COLS*100+'%';d.style.top=G.dr*12.5+'%'}
+function act(d){
+ if(G.type==='road'){G.dc=Math.max(0,Math.min(COLS-1,G.dc+(d==='l'?-1:d==='r'?1:0)));G.dr=Math.max(0,Math.min(ROWS-1,G.dr+(d==='u'?-1:d==='d'?1:0)));if(G.dr===0){G.s++;G.sp*=1.12;G.dc=3;G.dr=7;hud()}}
+ else if(d==='l'||d==='r')G.dc=Math.max(0,Math.min(COLS-1,G.dc+(d==='l'?-1:1)));
+ put()}
+function startGame(){
+ const A=$('#arena');if(!A||!G)return;
+ const t=G.type;let bg='';
+ if(t==='road'){for(let r=0;r<ROWS;r++)bg+=`<div style='position:absolute;left:0;right:0;top:${r*12.5}%;height:12.5%;background:${r===0?'#7CC6E8':r===7?'#8CCB6B':'#4A4F57'};${r>0&&r<7?'border-bottom:3px dashed #ffffff55':''}'></div>`}
+ else bg="<div style='position:absolute;inset:0;background:linear-gradient(#BFE6F5 0%,#E8F6EC 70%,#8CCB6B 70%)'></div>";
+ A.innerHTML=bg+`<div class='dk' id='dk'>${duck(lv(st.xp).l)}</div>`;
+ Object.assign(G,{dc:3,dr:7,s:0,over:false,last:performance.now(),el:[],acc:0,t:30,sp:1});put();
+ if(t==='road'){for(let r=1;r<=6;r++){const d=r%2?1:-1,v=(.9+Math.random()*.7)*d;for(let k=0;k<2;k++){const el=document.createElement('div');el.className='sp';el.textContent=['🚗','🚕','🚌','🚙'][(r+k)%4];el.style.top=r*12.5+'%';if(d>0)el.style.transform='scaleX(-1)';A.appendChild(el);G.el.push({r,x:k*3.5+Math.random()*2,v,el})}}}
+ hud();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
+}
+function loop(now){
+ if(!G||tab!=='rec'||!$('#arena')){raf=0;return}
+ const dt=Math.min(.05,(now-G.last)/1000);G.last=now;
+ if(G.type==='road'){
+  for(const c of G.el){c.x+=c.v*G.sp*dt;if(c.v>0&&c.x>COLS+1)c.x=-2;if(c.v<0&&c.x<-2)c.x=COLS+1;c.el.style.left=c.x/COLS*100+'%';
+   if(G.dr>=1&&G.dr<=6&&c.r===G.dr&&Math.abs(c.x-G.dc)<.7){end();return}}
+ }else{
+  const A=$('#arena');G.t-=dt;G.acc+=dt;
+  if(G.acc>.7){G.acc=0;const k=Math.random()<.25?'🪨':'🍞',c=Math.floor(Math.random()*COLS),el=document.createElement('div');el.className='sp';el.textContent=k;el.style.left=c/COLS*100+'%';el.style.top='-12.5%';A.appendChild(el);G.el.push({c,y:-1,k,el})}
+  for(const o of G.el.slice()){o.y+=(3+(30-G.t)*.08)*dt;o.el.style.top=o.y*12.5+'%';
+   if(o.y>=6.5&&o.y<=7.5&&o.c===G.dc){G.s=Math.max(0,G.s+(o.k==='🍞'?1:-2));o.el.remove();G.el.splice(G.el.indexOf(o),1)}
+   else if(o.y>8){o.el.remove();G.el.splice(G.el.indexOf(o),1)}}
+  hud();if(G.t<=0){end();return}
+ }
+ raf=requestAnimationFrame(loop);
+}
+const ptr=e=>{if(!G||G.over)return;const b=e.target.closest('[data-g]');
+ if(b&&e.type==='pointerdown'){e.preventDefault();act(b.dataset.g);return}
+ const a=e.target.closest('#arena');
+ if(a&&G.type==='crumbs'&&(e.type==='pointerdown'||e.buttons)){const r=a.getBoundingClientRect();G.dc=Math.max(0,Math.min(COLS-1,Math.floor((e.clientX-r.left)/r.width*COLS)));put()}};
+['pointerdown','pointermove'].forEach(n=>document.addEventListener(n,ptr));
+document.addEventListener('keydown',e=>{if(tab!=='rec'||!G||G.over)return;const m={ArrowLeft:'l',a:'l',ArrowRight:'r',d:'r',ArrowUp:'u',w:'u',ArrowDown:'d',s:'d'}[e.key];if(m){e.preventDefault();act(m)}});
+const sb=(typeof supabase!=='undefined'&&!SUPABASE_URL.startsWith('PEGA'))?supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+function amsg(t){$('#am').textContent=t}
+async function login(up){
+ if(!sb){amsg('Falta configurar Supabase en index.html.');return}
+ const email=$('#em').value.trim(),password=$('#pw').value;
+ if(!email||password.length<8){amsg('Escribe tu correo y una contraseña de al menos 8 caracteres.');return}
+ amsg('Un momento…');
+ const r=up?await sb.auth.signUp({email,password}):await sb.auth.signInWithPassword({email,password});
+ if(r.error){amsg(up?'No pude crear la cuenta. Prueba con otro correo o contraseña.':'Correo o contraseña incorrectos.');return}
+ amsg(up&&!r.data.session?'Te enviamos un correo para confirmar tu cuenta. Después vuelve y entra.':'');
+}
+$('#bin').addEventListener('click',()=>login(false));$('#bup').addEventListener('click',()=>login(true));
+async function loadState(){
+ const D={xp:0,coins:0,own:{},eq:{},done:{},tier:{},custom:[],hi:{}};let data=null;
+ try{const r=await sb.from('saves').select('state').eq('user_id',me.id).maybeSingle();net.ok=!r.error;if(r.data)data=r.data.state}catch(e){net.ok=false}
+ if(!data){try{data=JSON.parse(localStorage.getItem(LS)||'null')}catch(e){}}
+ Object.keys(st).forEach(k=>delete st[k]);Object.assign(st,D,data||{});
+ if(!net.ok)toast('Sin conexión: no se guardará en la nube hasta recargar');
+}
+async function enter(ses){
+ if(ses&&me&&me.id===ses.user.id)return;
+ if(!ses){me=null;net.f=null;net.code='';net.ok=false;Object.keys(st).forEach(k=>delete st[k]);$('#pw').value='';document.body.className='out';return}
+ me=ses.user;net.email=me.email||'';LS='patoquest-'+me.id;lastSaved='';lastDuck='';net.f=null;
+ await loadState();tab='pato';G=null;document.body.className='';render();if(st.share)loadFriends();
+}
+async function flush(){
+ ct=0;if(!me||!net.ok)return;
+ const j=JSON.stringify(st);
+ if(j!==lastSaved){const r=await sb.from('saves').upsert({user_id:me.id,state:st,updated_at:new Date().toISOString()});if(!r.error)lastSaved=j}
+ await syncDuck();
+}
+function cloudSave(){if(!me||!net.ok)return;clearTimeout(ct);ct=setTimeout(flush,1200)}
+function afterAct(){cloudSave()}
+async function syncDuck(){
+ if(!me||!st.share)return;
+ const d={user_id:me.id,name:String(st.name||'Pato').slice(0,20),level:lv(st.xp).l,xp:st.xp,eq:Object.fromEntries(Object.entries(st.eq).filter(([,x])=>x))};
+ const j=JSON.stringify(d);if(j===lastDuck)return;
+ const r=await sb.from('ducks').upsert(d);if(!r.error)lastDuck=j;else net.err='No pude actualizar tu pato.';
+}
+async function loadFriends(){
+ if(!me)return;
+ const r=await sb.from('ducks').select('user_id,name,level,xp,eq,code');
+ if(r.error){net.err='No pude leer a tus amigos.';net.f=net.f||[]}else{net.err='';net.f=r.data;const m=r.data.find(x=>x.user_id===me.id);net.code=m?m.code:''}
+ const c=$('#mycode');if(c)c.textContent=net.code||'…';drawFriends();
+}
+async function shareNow(){await syncDuck();await loadFriends()}
+async function unshareNow(){await sb.from('ducks').delete().eq('user_id',me.id);net.code='';await loadFriends()}
+async function addFriend(c){
+ const m=$('#fm');m.textContent='Buscando…';
+ const r=await sb.rpc('add_friend',{p_code:c});
+ if(r.error){const t=r.error.message||'';m.textContent=t.includes('not_found')?'No encontré ese código. Revisa que esté bien escrito y que tu amigo haya activado «Mostrar mi pato».':t.includes('self')?'Ese es tu propio código.':'No pude agregar al amigo. Intenta de nuevo.';return}
+ m.textContent='¡Amigo agregado!';const i=$('#fc');if(i)i.value='';loadFriends();
+}
+function drawFriends(){
+ const e=$('#frl');if(!e)return;
+ if(net.f===null){e.innerHTML="<p class='mut'>Cargando amigos…</p>";return}
+ const M={};ITEMS.forEach(i=>M[i[0]]=i);
+ const rows=net.f.filter(x=>x&&typeof x.name==='string').sort((a,b)=>(+b.level||0)-(+a.level||0)).map(x=>{
+  const eq={};SLOTS.forEach(k=>{const it=x.eq&&typeof x.eq==='object'?M[x.eq[k]]:null;if(it&&it[1]===k)eq[k]=it[0]});
+  const worn=Object.values(eq).map(id=>M[id][2]),lvl=Math.max(1,Math.min(99,+x.level||1)),mine=x.user_id===me.id;
+  return `<div class='card shop'><div class='th'>${duck(lvl,eq)}</div><div><h3>${esc(String(x.name).slice(0,20))}${mine?' (tú)':''}</h3><div class='mut'>Nivel ${lvl} · ${Math.max(0,+x.xp||0)} XP</div><div>${worn.length?'Lleva: '+worn.join(', '):'Sin ropa todavía'}</div>${mine?'':`<button data-a='delf' data-v='${esc(x.user_id)}' style='margin-top:8px'>Quitar de mis amigos</button>`}</div></div>`}).join('');
+ e.innerHTML=(net.err?`<p class='tag t2'>${esc(net.err)}</p>`:'')+(rows||"<p class='mut'>Todavía no hay patos aquí. Muestra el tuyo y agrega amigos con su código.</p>")+`<button data-a='refresh' style='margin-top:6px'>Actualizar</button>`;
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&ct){clearTimeout(ct);flush()}});
+(async()=>{
+ if(!sb){document.body.className='out';amsg('Falta configurar Supabase en index.html.');return}
+ const{data}=await sb.auth.getSession();await enter(data.session);if(!data.session)document.body.className='out';
+ sb.auth.onAuthStateChange((ev,ses)=>{if(ev==='SIGNED_OUT')enter(null);else if(ev==='SIGNED_IN')enter(ses)});
+})();
+</script>
+</body>
+</html>
